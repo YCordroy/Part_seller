@@ -1,0 +1,1135 @@
+openapi: 3.0.3
+info:
+  title: 'Part-seller'
+  version: 0.0.0
+  description: | 
+    # Аутентификация
+    Для аутентификации и управления пользователями используются стандартные адреса из библиотеки Djoser.<br>
+    Более детально с адресами можно ознакомиться на официальном сайте разработчика.<br>
+      [Работа с пользователем.](https://djoser.readthedocs.io/en/latest/base_endpoints.html) *За исключением создания пользователя.*<br>
+      [Работа с  токеном.](https://djoser.readthedocs.io/en/latest/jwt_endpoints.html#)<br>
+      Url адреса, для этого, в проекте начинаются с `/api/auth/`.<br>
+    ### Метод передачи токена:
+        В заголовке "Authorization": "Bearer [TOKEN]
+    Все ключи имеют срок жизни, если ими не пользоваться, то через какое-то время он будет недоступным и любой запрос выдаст код ошибки 401.<br>
+    В ответе вернется:
+    ```json
+    {
+      "detail": "Given token not valid for any token type",
+      "code": "token_not_valid",
+      "messages": [
+        {
+          "token_class": "AccessToken",
+          "token_type": "access",
+          "message": "Token is invalid or expired"
+        }
+      ]
+    }
+    ```
+    # Ошибки
+    В проекте используются стандартные коды ответов HTTP.
+    ### Возможные коды ошибок:
+        
+      | Status Code      | Description | Reason                             |
+      | ---------------- | ------------| -----------------------------------|
+      | 200              | OK          | Все сработало, как и ожидалось.    |
+      | 201              | CREATED     | Объект создан.                     |
+      | 204              | NO CONTENT  | Объект удалён.
+      | 400              | BAD REQUEST | Недействительный запрос.       |
+      | 401              | UNAUTHORIZED| Не предоставлен действительный ключ API.    |
+      | 403              | FORBIDDEN | Нет прав доступа.|
+      | 404              | NOT FOUND| Запрошенный ресурс не существует.|
+      | 5xx | SERVER ERROR | Ошибки на стороне сервера| 
+      
+    # Параметры запроса
+    
+    Все параметры для GET запросов передаются в query.<br>
+    Если по заданным параметрам нет объектов, то в ответе будет:
+
+      ```json
+      {
+        "count": 0,
+        "results": []
+      }
+      ```
+      С кодом ответа 200
+
+      Это означает, что по фильтру объекты не найдены.
+paths:
+  /api/v1/category/:
+    get:
+      operationId: api_v1_category_list
+      summary: Список категорий
+      description: | 
+        ### Отображение списка доступных категорий.<br>
+        Доступно для всех пользователей<br>
+        Результат разбит по 10 объектов на странице.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: |
+            **Целое число**<br>
+            Номер страницы (пагинатор).
+        schema:
+          type: integer
+      tags:
+      - Категория
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryList'
+          description: 'Успешный ответ'
+  /api/v1/category/{id}/:
+    get:
+      operationId: api_v1_category_retrieve
+      summary: Детализация категории
+      description: |
+        ### Отображение категории по ключу.<br>
+        Доступно для всех пользователей<br>
+        * Если объект не найден - возвращает 404.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: |
+            **Целое число**<br>
+            Уникальное значение категории.
+      tags:
+      - Категория
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: 'Успешный ответ'
+        '404':
+          description: Страница не найдена.
+          content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      detail:
+                        type: string
+                        example: 'No Category matches the given query.'
+  /api/v1/location/:
+    get:
+      operationId: api_v1_location_list
+      summary: Список местоположений
+      description: | 
+        ### Отображение списка доступных местоположений.<br>
+        Доступно для всех пользователей<br>
+        Результат разбит по 10 объектов на странице.
+      parameters:
+      - in: query
+        name: name
+        schema:
+          type: string
+        description: |
+          **Поиск местоположения по названию.**<br>
+          Поддерживает неточное написание.<br>
+      - name: page
+        required: false
+        in: query
+        description: |
+            **Целое число**<br>
+            Номер страницы (пагинатор).
+        schema:
+          type: integer
+      tags:
+      - Местоположение
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationList'
+          description: 'Успешный ответ'
+  /api/v1/location/{id}/:
+    get:
+      operationId: api_v1_location_retrieve
+      summary: Детализация местоположения
+      description: |
+        ### Отображение местоположения по ключу.<br>
+        Доступно для всех пользователей<br>
+        * Если объект не найден - возвращает 404.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: |
+            **Целое число**<br>
+            Уникальное значение местоположения.
+        required: true
+      tags:
+      - Местоположение
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+          description: 'Успешный ответ'
+        '404':
+          description: Страница не найдена.
+          content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      detail:
+                        type: string
+                        example: 'No Location matches the given query.'
+  /api/v1/mark/:
+    get:
+      operationId: api_v1_mark_list
+      summary: Список марок
+      description: | 
+        ### Отображение списка доступных марок.<br>
+        Доступно для всех пользователей<br>
+        Результат разбит по 10 объектов на странице.
+      parameters:
+      - in: query
+        name: country
+        schema:
+          type: string
+        description: |
+          **Поиск марок по стране производителю.**<br>
+          Поддерживает неточное написание.<br>
+      - name: page
+        required: false
+        in: query
+        description: |
+            **Целое число**<br>
+            Номер страницы (пагинатор).
+        schema:
+          type: integer
+      tags:
+      - Марка
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkList'
+          description: 'Успешный ответ'
+  /api/v1/mark/{id}/:
+    get:
+      operationId: api_v1_mark_retrieve
+      summary: Детализация марки
+      description: |
+        ### Отображение марки по ключу.<br>
+        Доступно для всех пользователей<br>
+        * Если объект не найден - возвращает 404.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: |
+            **Целое число**<br>
+            Уникальное значение марки.
+        required: true
+      tags:
+      - Марка
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mark'
+          description: 'Успешный ответ'
+        '404':
+          description: Страница не найдена.
+          content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      detail:
+                        type: string
+                        example: 'No Mark matches the given query.'
+  /api/v1/model/:
+    get:
+      operationId: api_v1_model_list
+      summary: Список моделей
+      description: | 
+        ### Отображение списка доступных моделей.<br>
+        Доступно для всех пользователей<br>
+        Результат разбит по 10 объектов на странице.
+      parameters:
+      - in: query
+        name: mark
+        schema:
+          type: string
+        description: |
+          **Поиск моделей по названию марки.**<br>
+          Поддерживает неточное написание.<br>
+      - name: page
+        required: false
+        in: query
+        description: |
+            **Целое число**<br>
+            Номер страницы (пагинатор).
+        schema:
+          type: integer
+      tags:
+      - Модель
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelList'
+          description: 'Успешный ответ'
+  /api/v1/model/{id}/:
+    get:
+      operationId: api_v1_model_retrieve
+      summary: Детализация модели
+      description: |
+        ### Отображение модели по ключу.<br>
+        Доступно для всех пользователей<br>
+        * Если объект не найден - возвращает 404.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: |
+            **Целое число**<br>
+            Уникальное значение модели.
+        required: true
+      tags:
+      - Модель
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Model'
+          description: 'Успешный ответ'
+        '404':
+          description: Страница не найдена.
+          content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      detail:
+                        type: string
+                        example: 'No Model matches the given query.'
+  /api/v1/part/:
+    get:
+      operationId: api_v1_part_list
+      summary: Список запчастей
+      description: | 
+        ### Отображение списка доступных запчастей.<br>
+        Доступно для всех пользователей<br>
+        Результат разбит по 10 объектов на странице.
+      parameters:
+      - in: query
+        name: category
+        schema:
+          type: string
+        description: |
+          **Название категории запчасти.**<br>
+            Поддерживает неточное написание.<br>
+      - in: query
+        name: color
+        schema:
+          type: string
+        description: |
+          **Цвет запчасти.**<br>
+            Поддерживает неточное написание.<br>
+      - in: query
+        name: is_new_part
+        schema:
+          type: boolean
+        description: |
+          **Отображение только новых запчастей**<br>
+      - in: query
+        name: location
+        schema:
+          type: string
+        description: |
+          **Местоположение запчасти.**<br>
+            Поддерживает неточное написание.<br>
+      - in: query
+        name: mark_list
+        schema:
+          type: string
+        description: |
+          **Список возможных марок.**<br>
+            Необходимо указать список из Id номеров марок.<br>
+            Пример: [1,3]
+      - in: query
+        name: mark_name
+        schema:
+          type: string
+        description: |
+          **Марка авто отображаемых запчастей.**<br>
+            Поддерживает неточное написание.<br>
+      - in: query
+        name: model_name
+        schema:
+          type: string
+        description: |
+          **Модель авто отображаемых запчастей.**<br>
+            Поддерживает неточное написание.<br>
+      - name: page
+        required: false
+        in: query
+        description: |
+            **Целое число**<br>
+            Номер страницы (пагинатор).
+        schema:
+          type: integer
+      - in: query
+        name: part_name
+        schema:
+          type: string
+        description: |
+          **Название запчасти.**<br>
+            Поддерживает неточное написание.<br>
+      - in: query
+        name: price_gte
+        schema:
+          type: integer
+        description: |
+          **Стоимость запчасти, нижняя граница.**<br>
+      - in: query
+        name: price_lte
+        schema:
+          type: integer
+        description: |
+          **Стоимость запчасти, верхняя граница.**<br>
+      tags:
+      - Запчасть
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartList'
+          description: 'Успешный ответ'
+    post:
+      operationId: api_v1_part_create
+      summary: Создание запчасти
+      description: | 
+        ### Создание записи о запчасти.
+        * Доступно только авторизованным пользователям, иначе - 401<br>
+        * При создании запись проходит обязательную модерацию.
+        * Максимальное количество не проданных запчастей для одного пользователя 10.
+
+      tags:
+      - Запчасть
+      requestBody:
+        content:
+          application/json:
+            schema:
+                $ref: '#/components/schemas/PartCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PartCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PartCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Part'
+          description: 'Успешный ответ'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/No_part'
+  /api/v1/part/{id}/:
+    get:
+      operationId: api_v1_part_retrieve
+      summary: Детализация запчасти
+      description: |
+        ### Отображение запчасти по ключу.<br>
+        Доступно для всех пользователей<br>
+        * Если объект на модерации - 404
+        * Если объект не найден - 404.
+        * Если пользователь является автором записи, то добавляется три поля:<br>
+          ```json
+            {
+              is_approved: boolean
+              moder_checked: boolean
+              moder_comment: string
+            }
+          ```
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: |
+            **Целое число**<br>
+            Уникальное значение запчасти.
+        required: true
+      tags:
+      - Запчасть
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Part'
+          description: 'Успешный ответ'
+        '404':
+          $ref: '#/components/responses/No_part'
+    patch:
+      operationId: api_v1_part_update
+      summary: Редактирование записи
+      description: |
+        ### Редактирование записи с запчастью.
+        Частичное или полное изменение записи с запчастью.<br>
+        * Если объект не найден - возвращает 404.
+        * Доступно только для автора, в остальных случаях в ответе будет - 403.
+        * При каждом изменении записи она уходит на проверку модератором.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+        description: |
+            **Целое число**<br>
+            Уникальное значение запчасти.
+      tags:
+      - Запчасть
+      requestBody:
+        content:
+          application/json:
+            schema:
+                $ref: '#/components/schemas/PartCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PartCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PartCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Part'
+          description: 'Успешный ответ'
+        '403':
+          $ref: '#/components/responses/Unauthor'
+        '404':
+          $ref: '#/components/responses/No_part'
+
+    delete:
+      operationId: api_v1_part_destroy
+      summary: Удаление запчасти
+      description: |
+        ### Удаление записи с запчастью.
+        * Если объект не найден - возвращает 404.
+        * Доступно только для автора, в остальных случаях в ответе будет - 403.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+        description: |
+            **Целое число**<br>
+            Уникальное значение запчасти.
+      tags:
+      - Запчасть
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No content
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: 'Запись удалена'
+        '403':
+          $ref: '#/components/responses/Unauthor'
+        '404':
+          $ref: '#/components/responses/No_part'
+  /api/v1/user/{id}/:
+    get:
+      operationId: api_v1_user_retrieve
+      summary: Отображение пользователя.
+      description: |
+        ### Отображение страницы с информацией о конкретном пользователе.
+        * Доступно только авторизованным пользователям, иначе - 401.
+        * При отсутсвии пользователя - 404
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+        description: |
+            **Целое число**<br>
+            Уникальное значение пользователя.
+      tags:
+      - Пользователь
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: 'Успешный ответ'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/No_user'
+  /api/v1/user/{id}/parts/:
+    get:
+      operationId: api_v1_user_parts_retrieve
+      summary: Отображение запчастей пользователя
+      description: |
+        ### Отображение страницы с постами конкретного пользователя.
+        * Доступно для всех пользователей.
+        * При отсутсвии пользователя - 404
+        * Отображаются все запчасти, включая проданные.
+        * Результат разбит по 10 объектов на странице.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+        description: |
+            **Целое число**<br>
+            Уникальное значение пользователя.
+      - name: page
+        required: false
+        in: query
+        description: |
+            **Целое число**<br>
+            Номер страницы (пагинатор).
+        schema:
+          type: integer
+      tags:
+      - Пользователь
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartList'
+          description: 'Успешный ответ'
+        '404':
+          $ref: '#/components/responses/No_user'
+  /api/auth/users/:
+    post:
+      operationId: api_auth_users_create
+      summary: Создание пользователя
+      description: | 
+        ### Создание пользователя.
+        Доступно всем пользователям
+      tags:
+      - Пользователь
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomUserCreate'
+      responses:
+        '201':
+          description: Пользователь создан.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomUserCreate'
+  /api/v1/moderation/:
+    get:
+      operationId: api_v1_moderation_list
+      summary: Список запчастей для модерации
+      description: | 
+        ### Отображение списка запчастей на модерации.<br>
+        * Доступно только модераторам, остальным - 403<br>
+        * Результат разбит по 10 объектов на странице.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: |
+            **Целое число**<br>
+            Номер страницы (пагинатор).
+        schema:
+          type: integer
+      tags:
+      - Модерация
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModerPartList'
+          description: 'Успешный ответ'
+        '403':
+          $ref: '#/components/responses/UnModer'
+  /api/v1/moderation/{id}/:
+    get:
+      operationId: api_v1_moderation_retrieve
+      summary: Детализация запчасти
+      description: |
+        ### Отображение запчасти по ключу.<br>
+        * Доступно только модераторам, остальным - 403<br>
+        * Если объект не найден - возвращает 404.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: |
+            **Целое число**<br>
+            Уникальное значение запчасти.
+        required: true
+      tags:
+      - Модерация
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModerPart'
+          description: 'Успешный ответ'
+        '403':
+          $ref: '#/components/responses/UnModer'
+        '404':
+          $ref: '#/components/responses/No_part'
+    patch:
+      operationId: api_v1_moderation_update
+      summary: Модерация запчасти
+      description: |
+        ### Модерация запчасти по ключу.<br>
+        * Доступно только модераторам, остальным - 403<br>
+        * Если объект не найден - возвращает 404.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: |
+            **Целое число**<br>
+            Уникальное значение запчасти.
+        required: true
+      tags:
+      - Модерация
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                moder_comment:
+                  type: string
+                is_approved:
+                  type: boolean
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModerPart'
+          description: 'Успешный ответ'
+        '403':
+          $ref: '#/components/responses/UnModer'
+        '404':
+          $ref: '#/components/responses/No_part'
+    delete:
+      operationId: api_v1_moderation_destroy
+      summary: Удаление запчасти
+      description: |
+        ### Удаление запчасти.<br>
+        * Доступно только модераторам, остальным - 403<br>
+        * Если объект не найден - возвращает 404.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: |
+            **Целое число**<br>
+            Уникальное значение запчасти.
+        required: true
+      tags:
+      - Модерация
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No content
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: 'Запись удалена'
+        '403':
+          $ref: '#/components/responses/UnModer'
+        '404':
+          $ref: '#/components/responses/No_part'
+
+components:
+  schemas:
+    Category:
+      type: object
+      description: Схема отображения отдельной категории.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+          title: Название
+          maxLength: 100
+      required:
+      - id
+      - name
+    CategoryList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+    Location:
+      type: object
+      description: Схема для отображения отдельной локации.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Название
+          maxLength: 100
+      required:
+      - id
+      - name
+    LocationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Location'
+    Mark:
+      type: object
+      description: Схема для отображения отдельной марки.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Название
+          maxLength: 100
+        producer_country_name:
+          type: string
+          title: Страна производитель
+          maxLength: 25
+      required:
+      - id
+      - name
+      - producer_country_name
+    MarkList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Mark'
+    Model:
+      type: object
+      description: Схема для отображения отдельной модели.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Название
+          maxLength: 100
+        mark:
+          allOf:
+          - $ref: '#/components/schemas/Mark'
+          readOnly: true
+      required:
+      - id
+      - mark
+      - name
+    ModelList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Model'
+    Part:
+      type: object
+      description: Схема для отображения запчасти.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        mark:
+          type: array
+          items:
+            $ref: '#/components/schemas/Mark'
+          title: Марка
+        model:
+          type: string
+          title: Модель
+        name:
+          type: string
+          title: Название
+          maxLength: 100
+        category:
+          type: string
+          title: Категория
+        json_data: {}
+        description:
+          type: string
+          title: Описание
+          maxLength: 250
+        images:
+          type: array
+          items:
+            type: string
+            format: binary
+          description: "Массив изображений (до 3-х файлов)"
+          title: Изображения
+        location:
+          type: string
+          title: Местоположение
+        price:
+          type: integer
+          example: 123
+          title: Цена
+        author:
+          type: string
+          readOnly: true
+          title: Автор
+        contact:
+          type: string
+          title: Контакт
+          maxLength: 25
+        sold:
+          type: boolean
+          example: false
+          title: Продано
+        uploaded_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата создания
+      required:
+      - author
+      - category
+      - contact
+      - description
+      - id
+      - location
+      - mark
+      - model
+      - name
+      - price
+      - uploaded_at
+    PartList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Part'
+    PartCreate:
+      allOf:
+        - $ref: '#/components/schemas/Part'
+      type: object
+      properties:
+        mark:
+          type: string
+    ModerPart:
+      allOf:
+        - $ref: '#/components/schemas/Part'
+      type: object
+      properties:
+        moder_checked:
+          type: boolean
+          example: false
+        moder_comment:
+          type: string
+        is_approved:
+          type: boolean
+          example: false
+    ModerPartList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModerPart'
+    User:
+      type: object
+      description: Схема отображения страницы пользователя.
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+          title: Имя пользователя
+          description: Обязательное поле. Не более 150 символов. Только буквы, цифры
+            и символы @/./+/-/_.
+        location:
+          type: string
+          title: Местоположение
+        contact:
+          type: string
+          title: Контакт
+          maxLength: 25
+    CustomUserCreate:
+      allOf:
+        - $ref: '#/components/schemas/User'
+      type: object
+      description: Схема для создания пользователя.
+      properties:
+        email:
+          type: string
+          format: email
+          title: Эмейл
+          maxLength: 50
+        password:
+          type: string
+          writeOnly: true
+      required:
+      - contact
+      - email
+      - location
+      - password
+      - username
+  responses:
+    Unauthorized:
+      description: Пожалуйста авторизуйтесь.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                type: string
+                example: 'Учетные данные не были предоставлены.'
+    No_part:
+          description: Страница не найдена.
+          content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      detail:
+                        type: string
+                        example: 'No Part matches the given query.'
+    Unauthor:
+          description: Нет доступа.
+          content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      detail:
+                        type: string
+                        example: 'Изменение чужого контента запрещено!'
+    No_user:
+          description: Страница не найдена.
+          content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      detail:
+                        type: string
+                        example: 'No User matches the given query.'
+    UnModer:
+      description: Нет доступа.
+      content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: 'Staff only'
+                
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
