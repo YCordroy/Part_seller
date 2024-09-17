@@ -4,7 +4,7 @@ from rest_framework import routers
 
 from .views import (CategoryViewSet, LocationViewSet, MarkViewSet,
                     ModelViewSet, ModeratorViewSet, PartViewSet,
-                    UserDetailView, UserPartsListView)
+                    UserDetailView, UserPartsListView, FavoriteViewSet)
 
 router_v1 = routers.DefaultRouter()
 router_v1.register(r'mark', MarkViewSet)
@@ -13,6 +13,7 @@ router_v1.register(r'location', LocationViewSet)
 router_v1.register(r'part', PartViewSet, basename='part')
 router_v1.register(r'category', CategoryViewSet)
 router_v1.register(r'moderation', ModeratorViewSet, basename='moderation')
+router_v1.register(r'favorites', FavoriteViewSet, basename='favorites')
 
 urlpatterns = [
     path('v1/', include(router_v1.urls)),

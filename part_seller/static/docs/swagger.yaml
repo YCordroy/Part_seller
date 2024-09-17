@@ -801,7 +801,112 @@ paths:
           $ref: '#/components/responses/UnModer'
         '404':
           $ref: '#/components/responses/No_part'
+  /api/v1/favorites/:
+    get:
+      operationId: api_v1_favorites
+      summary: Отображение избранных запчастей
+      description: |
+        ### Отображение страницы с избранными запчастями пользователя.
+        * Доступно только авторизованным пользователям, иначе - 401<br>
+        * Индивидуальная страница, для каждого пользователя.
+        * Отображаются все запчасти, включая проданные.
+        * Результат разбит по 10 объектов на странице.
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: |
+            **Целое число**<br>
+            Номер страницы (пагинатор).
+          schema:
+            type: integer
+      tags:
+        - Избранное
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartList'
+          description: 'Успешный ответ'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: api_v1_favorites_create
+      summary: Добавление в избранное
+      description: |
+        ### Добавление запчасти в избранное
+        * Доступно только авторизованным пользователям, иначе - 401<br>
 
+      tags:
+        - Избранное
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                part:
+                  type: integer
+                  title: Запчасть
+        required: true
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Part'
+          description: 'Успешный ответ'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          description: Не правильный запрос
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  part:
+                    type: string
+                    example: [
+                      "Недопустимый первичный ключ 0 - объект не существует."
+                    ]
+    /api/v1/favorites/{id}/:
+      delete:
+        operationId: api_v1_favorites_destroy
+        summary: Удаление из избранного
+        description: |
+          ### Удаление запчасти из избранного.<br>
+          * Если объект не найден - возвращает 404.
+        parameters:
+          - in: path
+            name: id
+            schema:
+              type: integer
+            description: |
+              **Целое число**<br>
+              Уникальное значение запчасти.
+            required: true
+        tags:
+          - Избранное
+        security:
+          - jwtAuth: [ ]
+        responses:
+          '204':
+            description: No content
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    detail:
+                      type: string
+                      example: 'Запись удалена'
+          '404':
+            $ref: '#/components/responses/No_part'
 components:
   schemas:
     Category:

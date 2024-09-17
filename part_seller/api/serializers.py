@@ -3,7 +3,10 @@ from djoser.serializers import UserCreateSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from parts.models import Category, Location, Mark, Model, Part, PartImage, User
+from parts.models import (Category, Location, Mark,
+                          Model, Part, PartImage,
+                          User, Favorite
+                          )
 
 from .validators import RegexpProc, UsernameValidator
 
@@ -242,3 +245,15 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ('id', 'name')
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Favorite
+        fields = ('part',)
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        part_serializer = PartSerializer(instance.part)
+        representation['part'] = part_serializer.data
+        return representation

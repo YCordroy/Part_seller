@@ -226,3 +226,11 @@ class Category(VisibleModel):
                 name='unique_category'
             )
         ]
+
+
+class Favorite(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    part = models.ForeignKey(Part, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('user', 'part')

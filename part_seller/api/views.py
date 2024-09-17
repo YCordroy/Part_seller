@@ -1,5 +1,5 @@
 from django.conf import settings
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, mixins
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import (
     ListAPIView,
@@ -9,14 +9,17 @@ from rest_framework.generics import (
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 
-from parts.models import Category, Location, Mark, Model, Part, PartImage, User
+from parts.models import (
+    Category, Location, Mark,
+    Model, Part, PartImage,
+    User, Favorite)
 
 from .filters import LocationFilter, MarkFilter, ModelFilter, PartFilter
 from .pagination import TenOnPagePaginator
-from .permissions import IsAuthorOrReadOnly, IsModerOnly
+from .permissions import IsAuthorOrReadOnly, IsModerOnly, IsAuthorOnly
 from .serializers import (AuthorPartSerializer, CategorySerializer,
                           LocationSerializer, MarkSerializer, ModelSerializer,
-                          ModerPartSerializer, PartSerializer, UserSerializer)
+                          ModerPartSerializer, PartSerializer, UserSerializer, FavoriteSerializer)
 from .validators import validate_image
 
 
@@ -184,3 +187,44 @@ class ModeratorViewSet(viewsets.ModelViewSet):
         serializer.save(
             moder_checked=True
         )
+
+
+class FavoriteViewSet(mixins.CreateModelMixin,
+                      mixins.DestroyModelMixin,
+                      mixins.ListModelMixin,
+                      viewsets.GenericViewSet):
+    queryset = Favorite.objects.all()
+    serializer_class = FavoriteSerializer
+    permission_classes = (IsAuthorOnly,)
+    pagination_class = TenOnPagePaginator
+
+    def perform_create(self, serializer):
+        part_id = self.request.data['part']
+        try:
+            part = Part.objects.get(
+                pk=part_id,
+                is_visible=True,
+                is_approved=True
+            )
+        except Part.DoesNotExist:
+            raise ValidationError({
+                'part': [f'Недопустимый первичный ключ {part_id} - объект не существует.']
+            }
+            )
+        serializer.save(user=self.request.user, part=part)
+
+    def get_queryset(self):
+        return Favorite.objects.filter(
+            user=self.request.user,
+            part__is_visible=True,
+            part__is_approved=True
+        )
+
+    def get_object(self):
+        try:
+            return Favorite.objects.get(
+                user=self.request.user,
+                part_id=self.kwargs['pk']
+            )
+        except Favorite.DoesNotExist:
+            raise ValidationError({'detail': 'Объект не найден'})
